@@ -14,7 +14,13 @@ def create_payload(file_name):
     # Grab the title from the html
     tree = BeautifulSoup(html_source)
     title = tree.h1.string.strip()
-    print(title)
+
+    html = str(tree)
+    html = html.split('\n')
+    html = html[2:]
+    html = "\n".join(html)
+
+    print(html)
 
     # Put the payload in the format that zendesk will accept
     data = {'article': {'locale': 'en-us', 'title': title, 'body': str(tree)}}
@@ -53,13 +59,13 @@ print section_url
 data = create_payload(sys.argv[1])
 
 # Create a session so we can post to zendesk
-session = requests.Session()
-session.auth = (email, password)
-session.headers = {'Content-Type': 'application/json'}
+#session = requests.Session()
+#session.auth = (email, password)
+#session.headers = {'Content-Type': 'application/json'}
 
 # Post to zendesk and get the response
-r = session.post(section_url, data)
+#r = session.post(section_url, data)
 
 # Print response data
-print(r.status_code)
-print(r.raise_for_status())
+#print(r.status_code)
+#print(r.raise_for_status())
