@@ -12,19 +12,12 @@ def create_payload(file_name):
         html_source = f.read()
 
     # Grab the title from the html
-    tree = BeautifulSoup(html_source)
+    tree = BeautifulSoup(html_source, "html.parser")
     title = tree.h1.string.strip()
 
-    html = str(tree)
-    html = html.split('\n')
-    html = html[2:]
-    html = "\n".join(html)
+    html = str(tree.body)
 
-    print(html)
-
-    # Put the payload in the format that zendesk will accept
-    data = {'article': {'locale': 'en-us', 'title': title, 'body': str(tree)}}
-    return json.dumps(data)
+    return title, html
 
 def get_section(url, section_name, email = None, password = None):
     session = requests.Session()
@@ -39,8 +32,31 @@ def get_section(url, section_name, email = None, password = None):
     if not section:
         raise Exception("Failed to find section " + section_name)
 
-    print(section)
     return section
+
+def get_article(url, article_name):
+    session = requests.Session()
+    response = session.get(url)
+    articles = json.loads(response.content)
+    article = None
+    for i in articles["articles"]:
+        if i['name'] == article_name:
+            article = i
+            break
+
+    if article:
+        return article
+    return None
+
+def update_article(email, password, url, article, body, title):
+    session = requests.Session()
+    session.auth = (email, password)
+    session.headers = {'Content-Type': 'application/json'}
+    data = json.dumps({'translation':{'body':body, 'title':title}})
+    url = url + "/api/v2/help_center/articles/" + str(article['id']) + "/translations/" + str(article["locale"]) + ".json"
+    r = session.put(url, data)
+    print(r.status_code)
+    print(r.raise_for_status())
 
 # Grab variables for authentication and the url from the environment
 env = os.environ
@@ -53,19 +69,24 @@ url = env['ZENDESK_URL']
 section = get_section(url, section_name)
 section_url = section["url"].rstrip(".json")
 section_url += "/articles.json"
-print section_url
 
 # Get the payload
-data = create_payload(sys.argv[1])
+title, html = create_payload(sys.argv[1])
 
-# Create a session so we can post to zendesk
-#session = requests.Session()
-#session.auth = (email, password)
-#session.headers = {'Content-Type': 'application/json'}
+article = get_article(section_url, title)
+if not article:
+    data = json.dumps({'article': {'locale': 'en-us', 'title': title, 'body': html}})
+    # Create a session so we can post to zendesk
+    session = requests.Session()
+    session.auth = (email, password)
+    session.headers = {'Content-Type': 'application/json'}
 
-# Post to zendesk and get the response
-#r = session.post(section_url, data)
+    # Post to zendesk and get the response
+    r = session.post(section_url, data)
 
-# Print response data
-#print(r.status_code)
-#print(r.raise_for_status())
+    # Print response data
+    print(r.status_code)
+    print(r.raise_for_status())
+
+else:
+    update_article(email, password, url, article, html, title)
