@@ -1,5 +1,4 @@
 # zendesk-publish-script
-This is a simple script that takes an html file as an argument and publishes
-its contents to a Zendesk article. Does not handle publishing the CSS the html
-file uses(not sure how possible this is yet). This is just an example of how
-publishing to Zendesk can be automated.
+This is a script that takes an html file and a section as arguments and
+publishes the html to that zection on zendesk. Handles images and tags, also
+can update a article if it already exists.
