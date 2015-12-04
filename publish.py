@@ -157,7 +157,7 @@ tags = get_tags(tree)
 article = get_article(section_url, title, email, password)
 # If the article doesnt exist, upload it
 if not article:
-    data = json.dumps({'article': {'locale': 'en-us', 'title': title,
+    data = json.dumps({'article': {'locale': 'en-us', 'draft': True, 'title': title,
         'body': html, 'label_names' : tags}})
     # Create a session so we can post to zendesk
     session = requests.Session()
