@@ -25,13 +25,13 @@ def create_payload(file_name):
     html = str(tree.body)
     return title, html, tree
 
-# Get tags out of the meta tags in the html
-def get_tags(tree):
-    tags = []
-    for item in tree.find_all('meta', attrs={'name' : 'tags'}):
-        for tag in item['content'].split():
-            tags.append(tag)
-    return tags
+# Get labels out of the meta labels in the html
+def get_labels(tree):
+    labels = []
+    for item in tree.find_all('meta', attrs={'name' : 'labels'}):
+        for label in item['content'].split():
+            labels.append(label)
+    return labels
 
 # Get a list of sections and return the one we want
 def get_section(url, section_id, email = None, password = None):
@@ -46,7 +46,7 @@ def get_section(url, section_id, email = None, password = None):
             break
 
     if not section:
-        raise Exception("Failed to find section " + section_id)
+        raise Exception("Failed to find section " + str(section_id))
 
     return section
 
@@ -79,11 +79,11 @@ def update_article(email, password, url, article, body, title):
     print(r.raise_for_status())
 
 # Update the artile metadata
-def update_article_metadata(email, password, url, article, tags):
+def update_article_metadata(email, password, url, article, labels):
     session = requests.Session()
     session.auth = (email, password)
     session.headers = {'Content-Type': 'application/json'}
-    data = json.dumps({'article':{'label_names':tags}})
+    data = json.dumps({'article':{'label_names':labels}})
     url = url + "/api/v2/help_center/articles/" + str(article['id']) + ".json"
     r = session.put(url, data)
     print(r.status_code)
@@ -152,13 +152,13 @@ section_url += "/articles.json"
 
 # Get the payload
 title, html, tree = create_payload(file_name)
-tags = get_tags(tree)
+labels = get_labels(tree)
 # Get the article
 article = get_article(section_url, title, email, password)
 # If the article doesnt exist, upload it
 if not article:
     data = json.dumps({'article': {'locale': 'en-us', 'draft': True, 'title': title,
-        'body': html, 'label_names' : tags}})
+        'body': html, 'label_names' : labels}})
     # Create a session so we can post to zendesk
     session = requests.Session()
     session.auth = (email, password)
@@ -171,7 +171,7 @@ if not article:
     print(r.status_code)
     print(r.raise_for_status())
 else:
-    update_article_metadata(email, password, url, article, tags)
+    update_article_metadata(email, password, url, article, labels)
 # Now that the article exists, upload the images and correct the urls for the
 # images
 article = get_article(section_url, title, email, password)
