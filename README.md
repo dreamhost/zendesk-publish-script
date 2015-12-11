@@ -17,6 +17,6 @@ Then you can run the script with:
 
 `python publish.py file.html section_num`
 
-To run the mass publish script, write a yaml file with the configs (see example.yml), then run:
+To mass publish articles, write a yaml file with the configs (see example.yml), then run:
 
-`python mass_publish.py file.yml`
+`python publish.py file.yml`
