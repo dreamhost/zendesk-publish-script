@@ -1,9 +1,11 @@
 # This is an example config for the mass publish script
-articles/how_to_use_a_computer.html:
+# The outermost item is the name of the directory that the articles are in, the
+# section_id is the zendesk section_id the articles in the directory go into,
+# and the item named "articles" is a list of articles in that directory.
+build/html/articles:
   section_id: 153900
-articles/how_to_fight_a_bear.html:
-  section_id: 153909
-articles/derp.html:
-  section_id: 153902
-articles/cow.html:
-  section_id: 153905
+  articles:
+    - how_to_fight_a_bear.html:
+    - derp.html:
+    - cow.html:
+    - how_to_use_a_computer.html:

@@ -189,11 +189,12 @@ if re.match(".*\.yml", file_path) or re.match(".*\.yaml", file_path):
 
     file_directory, file_name = os.path.split(file_path)
 
-    for item in data.keys():
-        print("Publishing " + item)
-        html_file = file_directory + '/' + item
-        art = article(html_file, password, email, url, data[item]['section_id'])
-        art.publish_or_update()
+    for article_directory in data.keys():
+        for i in data[article_directory]['articles']:
+            html_file = file_directory + '/' + article_directory + '/' + i
+            print("Publishing " + html_file)
+            art = article(html_file, password, email, url, data[article_directory]['section_id'])
+            art.publish_or_update()
 
 # If it isnt publish the file specified to the section specified.
 else:
