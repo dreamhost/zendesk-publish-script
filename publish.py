@@ -33,6 +33,7 @@ class article:
         else:
             self.publish_article(article_list_url)
             if self.tree.find_all('img'):
+                self.article = self.get_article(article_list_url)
                 self.upload_pictures()
                 self.update_article()
 
