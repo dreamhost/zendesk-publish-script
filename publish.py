@@ -15,6 +15,7 @@ class article:
         self.url = url
         self.section_id = section_id
 
+    # Publish the article if it needs to be published, else update it if it already exists
     def publish_or_update(self):
         self.create_payload()
         self.labels = self.get_labels()
@@ -35,6 +36,7 @@ class article:
                 self.upload_pictures()
                 self.update_article()
 
+    # Publish the article to zendesk
     def publish_article(self, section_url):
         # Create a session so we can post to zendesk
         session = requests.Session()
@@ -51,6 +53,7 @@ class article:
         print(r.status_code)
         print(r.raise_for_status())
 
+    # Set self.tree and self.title based on the contents of the file self.file_name points to
     def create_payload(self):
         # Open the file and get its contents
         with open(self.file_name, mode='r', encoding='utf-8') as f:
@@ -165,6 +168,7 @@ class article:
                             print tag['src']
                             break
 
+    # Get a list of article attachments so we know if we need to upload them or if they already exist
     def get_article_attachments(self):
         session = requests.Session()
         session.auth = (self.email, self.password)
@@ -175,10 +179,29 @@ class article:
 # Grab variables for authentication and the url from the environment
 env = os.environ
 
-email = env['EMAIL']
-password = env['ZENDESK_PASS']
-url = env['ZENDESK_URL']
-file_path = sys.argv[1]
+try:
+    email = env['EMAIL']
+except:
+    print("The environment variable 'EMAIL' is not set, please set it to the email that you use with zendesk")
+    sys.exit(1)
+
+try:
+    password = env['ZENDESK_PASS']
+except:
+    print("The environment variable 'ZENDESK_PASS' is not set, please set it to your zendesk password")
+    sys.exit(1)
+
+try:
+    url = env['ZENDESK_URL']
+except:
+    print("The environment variable 'ZENDESK_URL' is not set, please set it to the url of the zendesk you wish to publish to")
+    sys.exit(1)
+
+try:
+    file_path = sys.argv[1]
+except:
+    print("You did not pass a file as an argument into the program")
+    sys.exit(1)
 
 # Check if the file passed in as an argument is a yaml file, if it is, parse it
 # and do the mass publishing stuff.
