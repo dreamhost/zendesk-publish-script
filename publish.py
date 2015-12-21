@@ -158,15 +158,11 @@ class article:
                     r = session.post(pic_url, files=files)
                     print(r.status_code)
                     print(r.raise_for_status())
-                    print(r.json())
                     tag['src'] = r.json()['article_attachment']['content_url']
                 else:
                     for item in attachments:
                         if item['file_name'] == file_name:
-                            print item
-                            print item['content_url']
                             tag['src'] = item['content_url']
-                            print tag['src']
                             break
 
     # Get a list of article attachments so we know if we need to upload them or if they already exist
