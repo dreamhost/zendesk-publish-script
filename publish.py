@@ -65,7 +65,7 @@ class article:
         try:
             self.title = self.tree.h1.string.strip()
         except:
-            self.title = self.tree.title.string()
+            self.title = self.tree.title.string
 
         # Strip the class out of the divs that have an id and have the class
         # "section"
