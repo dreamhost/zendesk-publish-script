@@ -62,7 +62,10 @@ class article:
 
         # Grab the title from the html
         self.tree = BeautifulSoup(html_source, "html.parser")
-        self.title = self.tree.h1.string.strip()
+        try:
+            self.title = self.tree.h1.string.strip()
+        except:
+            self.title = self.title.string()
 
         # Strip the class out of the divs that have an id and have the class
         # "section"
