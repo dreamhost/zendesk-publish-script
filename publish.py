@@ -214,7 +214,11 @@ if re.match(".*\.yml", file_path) or re.match(".*\.yaml", file_path):
 
     for article_directory in data.keys():
         for i in data[article_directory]['articles']:
-            html_file = file_directory + '/' + article_directory + '/' + i
+            if not file_directory:
+                html_file = article_directory + '/' + i
+            else:
+                html_file = file_directory + '/' + article_directory + '/' + i
+
             print("Publishing " + html_file)
             art = article(html_file, password, email, url, data[article_directory]['section_id'])
             art.publish_or_update()
