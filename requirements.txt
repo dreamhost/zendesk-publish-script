@@ -1,4 +1,4 @@
 requests
 beautifulsoup4
 pyyaml
-pyOpenSSL
+ndg-httpsclient
