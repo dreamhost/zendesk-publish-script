@@ -37,6 +37,8 @@ class article:
                 self.upload_pictures()
                 self.update_article()
 
+        print self.article['html_url']
+
     # Publish the article to zendesk
     def publish_article(self, section_url):
         # Create a session so we can post to zendesk
