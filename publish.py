@@ -65,7 +65,7 @@ class article:
         # Grab the title from the html
         self.tree = BeautifulSoup(html_source, "html.parser")
         try:
-            self.title = self.tree.h1.string.strip()
+            self.title = self.tree.h1.string.extract()
         except:
             self.title = self.tree.title.string
 
