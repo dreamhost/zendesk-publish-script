@@ -39,6 +39,31 @@ class article:
 
         print self.article['html_url']
 
+    def deprecate(self):
+        self.create_payload()
+        section = self.get_section()
+        article_list_url = section["url"].rstrip(".json") + "/articles.json?per_page=500"
+
+        self.article = self.get_article(article_list_url)
+        if article:
+            self.deprecate_article_metadata()
+            print(file_path + " has been deprecated")
+            print self.article['html_url']
+
+        else:
+            print("That article doesn't exist therefore cant be deprecated")
+
+    # Update the artile metadata
+    def deprecate_article_metadata(self):
+        session = requests.Session()
+        session.auth = (self.email, self.password)
+        session.headers = {'Content-Type': 'application/json'}
+        data = json.dumps({'translation':{'outdated': True}})
+        url = self.url + "/api/v2/help_center/articles/" + str(self.article['id']) + "/translations/" + str(self.article["locale"]) + ".json"
+        r = session.put(url, data)
+        print(r.status_code)
+        print(r.raise_for_status())
+
     # Publish the article to zendesk
     def publish_article(self, section_url):
         # Create a session so we can post to zendesk
@@ -206,29 +231,36 @@ except:
     print("You did not pass a file as an argument into the program")
     sys.exit(1)
 
-# Check if the file passed in as an argument is a yaml file, if it is, parse it
-# and do the mass publishing stuff.
-if re.match(".*\.yml", file_path) or re.match(".*\.yaml", file_path):
-    file_path = os.path.expandvars(file_path)
-
-    data = yaml.load(open(file_path))
-
-    file_directory, file_name = os.path.split(file_path)
-
-    for section_id in data.keys():
-        for article_directory in data[section_id].keys():
-            for i in data[section_id][article_directory]:
-                if not file_directory:
-                    html_file = article_directory + '/' + i
-                else:
-                    html_file = file_directory + '/' + article_directory + '/' + i
-
-                print("Publishing " + html_file)
-                art = article(html_file, password, email, url, section_id)
-                art.publish_or_update()
-
-# If it isnt publish the file specified to the section specified.
-else:
+try:
     section_id = int(sys.argv[2])
+    dep = sys.argv[3]
     derp = article(file_path, password, email, url, section_id)
-    derp.publish_or_update()
+    derp.deprecate()
+
+except:
+    # Check if the file passed in as an argument is a yaml file, if it is, parse it
+    # and do the mass publishing stuff.
+    if re.match(".*\.yml", file_path) or re.match(".*\.yaml", file_path):
+        file_path = os.path.expandvars(file_path)
+
+        data = yaml.load(open(file_path))
+
+        file_directory, file_name = os.path.split(file_path)
+
+        for section_id in data.keys():
+            for article_directory in data[section_id].keys():
+                for i in data[section_id][article_directory]:
+                    if not file_directory:
+                        html_file = article_directory + '/' + i
+                    else:
+                        html_file = file_directory + '/' + article_directory + '/' + i
+
+                    print("Publishing " + html_file)
+                    art = article(html_file, password, email, url, section_id)
+                    art.publish_or_update()
+
+    # If it isnt publish the file specified to the section specified.
+    else:
+        section_id = int(sys.argv[2])
+        derp = article(file_path, password, email, url, section_id)
+        derp.publish_or_update()
