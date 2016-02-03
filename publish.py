@@ -28,9 +28,11 @@ class article:
             self.update_article_metadata()
             if self.tree.find_all('img'):
                 self.upload_pictures()
+            self.fix_notes()
             self.update_article()
 
         else:
+            self.fix_notes()
             self.publish_article(article_list_url)
             self.article = self.get_article(article_list_url)
             if self.tree.find_all('img'):
@@ -38,6 +40,32 @@ class article:
                 self.update_article()
 
         print self.article['html_url']
+
+    def fix_notes(self):
+        for note in self.tree.find_all('div'):
+            if note.has_attr('class') and note['class'] == ['admonition',
+                    'note']:
+                p = None
+                content_div = self.tree.new_tag('div')
+                content_div['class'] = ['alert-content']
+
+                for item in note.find_all():
+                    if item.name == 'p' and item.has_attr('class') and item['class'] == ['first', 'admonition-title']:
+                        item.extract()
+                    else:
+                        content_div.append(item)
+
+                note['class']=['alert', 'alert-important']
+                img = self.tree.new_tag('img')
+                img['src'] = "http://kbimages.objects.cdn.dream.io/images/dh-kb-important-icon.svg"
+                img['width']="60"
+                img['height']="60"
+                div = self.tree.new_tag('div')
+                div['class'] = ['alert-icon']
+                div.insert(0, img)
+                note.insert(0, div)
+
+                note.insert(1, content_div)
 
     # Publish the article to zendesk
     def publish_article(self, section_url):
@@ -156,7 +184,7 @@ class article:
             att_names.append(item['file_name'])
 
         for tag in self.tree.find_all('img'):
-            if tag.has_attr('src'):
+            if tag.has_attr('src') and not tag['src'].startswith('http'):
                 file_path = article_dir + '/' + tag['src']
                 file_name = os.path.split(file_path)[1]
                 if file_name not in att_names:
