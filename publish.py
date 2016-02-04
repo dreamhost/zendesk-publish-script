@@ -48,12 +48,12 @@ class article:
                 p = None
                 content_div = self.tree.new_tag('div')
                 content_div['class'] = ['alert-content']
-
-                for item in note.find_all():
-                    if item.name == 'p' and item.has_attr('class') and item['class'] == ['first', 'admonition-title']:
+                for item in note.find_all(recursive=False):
+                    if item.has_attr('class') and item['class'] == ['first','admonition-title']:
                         item.extract()
                     else:
-                        content_div.append(item)
+                        content_div.append(BeautifulSoup(str(item), "html.parser"))
+                        item.extract()
 
                 note['class']=['alert', 'alert-important']
                 img = self.tree.new_tag('img')
