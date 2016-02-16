@@ -165,6 +165,8 @@ class article:
                     print(r.status_code)
                     print(r.raise_for_status())
                     tag['src'] = r.json()['article_attachment']['content_url']
+                    att_names.append(file_name)
+                    attachments.append(r.json())
                 else:
                     for item in attachments:
                         if item['file_name'] == file_name:
