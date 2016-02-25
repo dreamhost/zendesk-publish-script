@@ -20,6 +20,12 @@ class article:
         self.create_payload()
         self.labels = self.get_labels()
         section = self.get_section()
+        if section['category_id'] == 202115418:
+            self.add_dhc_signup_button()
+
+        if section['category_id'] == 202115428:
+            self.add_dho_signup_button()
+
         article_list_url = section["url"].rstrip(".json") + "/articles.json?per_page=500"
 
         self.article = self.get_article(article_list_url)
@@ -55,6 +61,18 @@ class article:
         # Print response data
         print(r.status_code)
         print(r.raise_for_status())
+
+    def add_dhc_signup_button(self):
+        with open('dhc_button', mode='r', encoding='utf-8') as f:
+            button = f.read()
+
+        self.tree.body.append(BeautifulSoup(str(button), "html.parser"))
+
+    def add_dho_signup_button(self):
+        with open('dho_button', mode='r', encoding='utf-8') as f:
+            button = f.read()
+
+        self.tree.body.append(BeautifulSoup(str(button), "html.parser"))
 
     # Set self.tree and self.title based on the contents of the file self.file_name points to
     def create_payload(self):
