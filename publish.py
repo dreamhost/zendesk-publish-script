@@ -8,12 +8,13 @@ import yaml
 from io import open
 
 class article:
-    def __init__(self, file_name, password, email, url, section_id):
+    def __init__(self, file_name, password, email, url, section_id, script_dir):
         self.file_name = file_name
         self.password = password
         self.email = email
         self.url = url
         self.section_id = section_id
+        self.script_dir = script_dir
 
     # Publish the article if it needs to be published, else update it if it already exists
     def publish_or_update(self):
@@ -63,13 +64,15 @@ class article:
         print(r.raise_for_status())
 
     def add_dhc_signup_button(self):
-        with open('dhc_button', mode='r', encoding='utf-8') as f:
+        button_html_path = os.path.join(self.script_dir, 'dhc_button')
+        with open(button_html_path, mode='r', encoding='utf-8') as f:
             button = f.read()
 
         self.tree.body.append(BeautifulSoup(str(button), "html.parser"))
 
     def add_dho_signup_button(self):
-        with open('dho_button', mode='r', encoding='utf-8') as f:
+        button_html_path = os.path.join(self.script_dir, 'dho_button')
+        with open(button_html_path, mode='r', encoding='utf-8') as f:
             button = f.read()
 
         self.tree.body.append(BeautifulSoup(str(button), "html.parser"))
@@ -201,6 +204,7 @@ class article:
 
 # Grab variables for authentication and the url from the environment
 env = os.environ
+script_dir = os.path.dirname(sys.argv[0])
 
 try:
     email = env['EMAIL']
@@ -244,11 +248,12 @@ if re.match(".*\.yml", file_path) or re.match(".*\.yaml", file_path):
                     html_file = file_directory + '/' + article_directory + '/' + i
 
                 print("Publishing " + html_file)
-                art = article(html_file, password, email, url, section_id)
+                art = article(html_file, password, email, url, section_id,
+                        script_dir)
                 art.publish_or_update()
 
 # If it isnt publish the file specified to the section specified.
 else:
     section_id = int(sys.argv[2])
-    derp = article(file_path, password, email, url, section_id)
+    derp = article(file_path, password, email, url, section_id, script_dir)
     derp.publish_or_update()
