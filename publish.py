@@ -8,16 +8,19 @@ import yaml
 from io import open
 
 class article:
-    def __init__(self, file_name, password, email, url, section_id, script_dir):
+    def __init__(self, file_name, html_source, password, email, url,
+            section_id, script_dir, title=None):
         self.file_name = file_name
+        self.html_source = html_source
         self.password = password
         self.email = email
         self.url = url
         self.section_id = section_id
         self.script_dir = script_dir
+        self.title = title
 
     # Publish the article if it needs to be published, else update it if it already exists
-    def publish_or_update(self):
+    def publish_or_update_dreamcloud(self):
         self.create_payload()
         self.labels = self.get_labels()
         section = self.get_section()
@@ -45,6 +48,55 @@ class article:
                 self.update_article()
 
         print self.article['html_url']
+
+    # Publish the article if it needs to be published, else update it if it already exists
+    def publish_or_update(self):
+        self.create_payload()
+        self.labels = self.get_labels()
+        section = self.get_section()
+        article_list_url = section["url"].rstrip(".json") + "/articles.json?per_page=500"
+
+        self.article = self.get_article(article_list_url)
+
+        if self.article:
+            self.update_article_metadata()
+            if self.tree.find_all('img'):
+                self.upload_pictures()
+            self.update_article()
+
+        else:
+            self.publish_article(article_list_url)
+            self.article = self.get_article(article_list_url)
+            if self.tree.find_all('img'):
+                self.upload_pictures()
+                self.update_article()
+
+        print self.article['html_url']
+
+    def deprecate(self):
+        self.create_payload()
+        section = self.get_section()
+        article_list_url = section["url"].rstrip(".json") + "/articles.json?per_page=500"
+
+        self.article = self.get_article(article_list_url)
+        if article:
+            self.deprecate_article_metadata()
+            print(file_path + " has been deprecated")
+            print self.article['html_url']
+
+        else:
+            print("That article doesn't exist therefore cant be deprecated")
+
+    # Update the artile metadata
+    def deprecate_article_metadata(self):
+        session = requests.Session()
+        session.auth = (self.email, self.password)
+        session.headers = {'Content-Type': 'application/json'}
+        data = json.dumps({'translation':{'outdated': True}})
+        url = self.url + "/api/v2/help_center/articles/" + str(self.article['id']) + "/translations/" + str(self.article["locale"]) + ".json"
+        r = session.put(url, data)
+        print(r.status_code)
+        print(r.raise_for_status())
 
     # Publish the article to zendesk
     def publish_article(self, section_url):
@@ -79,17 +131,14 @@ class article:
 
     # Set self.tree and self.title based on the contents of the file self.file_name points to
     def create_payload(self):
-        # Open the file and get its contents
-        with open(self.file_name, mode='r', encoding='utf-8') as f:
-            html_source = f.read()
-
         # Grab the title from the html
-        self.tree = BeautifulSoup(html_source, "html.parser")
-        try:
-            self.title = self.tree.h1.string
-            self.tree.h1.extract()
-        except:
-            self.title = self.tree.title.string
+        self.tree = BeautifulSoup(self.html_source, "html.parser")
+        if not self.title:
+            try:
+                self.title = self.tree.h1.string
+                self.tree.h1.extract()
+            except:
+                self.title = self.tree.title.string
 
         # Strip the class out of the divs that have an id and have the class
         # "section"
@@ -202,6 +251,23 @@ class article:
         r = session.get(url)
         return r.json()
 
+# Set self.tree and self.title based on the contents of the file self.file_name points to
+def get_html_from_html_file(file_name):
+    # Open the file and get its contents
+    with open(file_name, mode='r', encoding='utf-8') as f:
+        html_source = f.read()
+
+    return html_source
+
+# Set self.tree and self.title based on the contents of the file self.file_name points to
+def get_json_from_file(file_name):
+    # Open the file and get its contents
+    with open(file_name, mode='r', encoding='utf-8') as f:
+        json_source = f.read()
+        json_source = json.loads(json_source)
+
+    return json_source
+
 # Grab variables for authentication and the url from the environment
 env = os.environ
 script_dir = os.path.dirname(sys.argv[0])
@@ -230,10 +296,12 @@ except:
     print("You did not pass a file as an argument into the program")
     sys.exit(1)
 
+
+file_path = os.path.expandvars(file_path)
+
 # Check if the file passed in as an argument is a yaml file, if it is, parse it
 # and do the mass publishing stuff.
 if re.match(".*\.yml", file_path) or re.match(".*\.yaml", file_path):
-    file_path = os.path.expandvars(file_path)
 
     data = yaml.load(open(file_path))
 
@@ -253,7 +321,22 @@ if re.match(".*\.yml", file_path) or re.match(".*\.yaml", file_path):
                 art.publish_or_update()
 
 # If it isnt publish the file specified to the section specified.
-else:
+elif re.match(".*\.html", file_path):
     section_id = int(sys.argv[2])
-    derp = article(file_path, password, email, url, section_id, script_dir)
+    html_source = get_html_from_html_file(file_path)
+    derp = article(file_path, html_source, password, email, url, section_id, script_dir)
+    derp.publish_or_update_dreamcloud()
+
+elif re.match(".*\.json", file_path):
+    json_source = get_json_from_file(file_path)
+    html_source = json_source['body']
+    title = json_source['title']
+
+    try:
+        section_id = int(sys.argv[2])
+    except:
+        section_id = json_source['section_id']
+
+    derp = article(file_path, html_source, password, email, url, section_id,
+            script_dir, title)
     derp.publish_or_update()

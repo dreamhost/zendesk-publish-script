@@ -20,3 +20,7 @@ Then you can run the script with:
 To mass publish articles, write a yaml file with the configs (see example.yml), then run:
 
 `python publish.py file.yml`
+
+To publish a json file that is pulled from zendesk, use
+
+`python publish.py file.json`
