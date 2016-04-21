@@ -105,8 +105,12 @@ class article:
         session.auth = (email, password)
         session.headers = {'Content-Type': 'application/json'}
 
-        data = json.dumps({'article': {'locale': 'en-us', 'draft': False, 'title': self.title,
-            'body': str(self.tree.body), 'label_names' : self.labels}})
+        if self.tree.body:
+            data = json.dumps({'article': {'locale': 'en-us', 'draft': False, 'title': self.title,
+                'body': str(self.tree.body), 'label_names' : self.labels}})
+        else:
+            data = json.dumps({'article': {'locale': 'en-us', 'draft': False, 'title': self.title,
+                'body': str(self.tree), 'label_names' : self.labels}})
 
         # Post to zendesk and get the response
         r = session.post(section_url, data)
@@ -191,7 +195,11 @@ class article:
         session = requests.Session()
         session.auth = (self.email, self.password)
         session.headers = {'Content-Type': 'application/json'}
-        data = json.dumps({'translation':{'body':str(self.tree.body), 'title':self.title}})
+        if self.tree.body:
+            data = json.dumps({'translation':{'body':str(self.tree.body), 'title':self.title}})
+        else:
+            data = json.dumps({'translation':{'body':str(self.tree), 'title':self.title}})
+
         url = self.url + "/api/v2/help_center/articles/" + str(self.article['id']) + "/translations/" + str(self.article["locale"]) + ".json"
         r = session.put(url, data)
         print(r.status_code)
@@ -316,9 +324,10 @@ if re.match(".*\.yml", file_path) or re.match(".*\.yaml", file_path):
                     html_file = file_directory + '/' + article_directory + '/' + i
 
                 print("Publishing " + html_file)
-                art = article(html_file, password, email, url, section_id,
+                html_source = get_html_from_html_file(html_file)
+                art = article(html_file, html_source, password, email, url, section_id,
                         script_dir)
-                art.publish_or_update()
+                art.publish_or_update_dreamcloud()
 
 # If it isnt publish the file specified to the section specified.
 elif re.match(".*\.html", file_path):
