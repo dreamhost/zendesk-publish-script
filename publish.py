@@ -20,6 +20,7 @@ class article:
         self.title = title
 
     # Publish the article if it needs to be published, else update it if it already exists
+    # This function adds special dreamcloud buttons and uploads links
     def publish_or_update_dreamcloud(self):
         self.create_payload()
         self.labels = self.get_labels()
@@ -50,7 +51,7 @@ class article:
         print self.article['html_url']
 
     # Publish the article if it needs to be published, else update it if it already exists
-    def publish_or_update(self):
+    def publish_or_update_json(self):
         self.create_payload()
         self.labels = self.get_labels()
         section = self.get_section()
@@ -60,16 +61,11 @@ class article:
 
         if self.article:
             self.update_article_metadata()
-            if self.tree.find_all('img'):
-                self.upload_pictures()
             self.update_article()
 
         else:
             self.publish_article(article_list_url)
             self.article = self.get_article(article_list_url)
-            if self.tree.find_all('img'):
-                self.upload_pictures()
-                self.update_article()
 
         print self.article['html_url']
 
@@ -348,4 +344,4 @@ elif re.match(".*\.json", file_path):
 
     derp = article(file_path, html_source, password, email, url, section_id,
             script_dir, title)
-    derp.publish_or_update()
+    derp.publish_or_update_json()
