@@ -229,7 +229,7 @@ class article:
         # Collect the file_names of all the attachments
         att_names = []
         for item in attachments:
-            att_names.append(item['file_name'])
+            session.delete(item['url'])
 
         for tag in self.tree.find_all('img'):
             if tag.has_attr('src'):
