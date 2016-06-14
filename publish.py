@@ -228,8 +228,11 @@ class article:
 
         # Collect the file_names of all the attachments
         att_names = []
+
         for item in attachments:
             session.delete(item['url'])
+
+        attachments = []
 
         for tag in self.tree.find_all('img'):
             if tag.has_attr('src'):
@@ -242,7 +245,7 @@ class article:
                     print(r.raise_for_status())
                     tag['src'] = r.json()['article_attachment']['content_url']
                     att_names.append(file_name)
-                    attachments.append(r.json())
+                    attachments.append(r.json()['article_attachment'])
                 else:
                     for item in attachments:
                         if item['file_name'] == file_name:
