@@ -11,7 +11,7 @@ from io import open
 
 class article:
     def __init__(self, file_name, html_source, password, email, url,
-            section_id, script_dir, title=None):
+            section_id, script_dir, title=None, article_id=None):
         self.file_name = file_name
         self.html_source = html_source
         self.password = password
@@ -20,6 +20,7 @@ class article:
         self.section_id = section_id
         self.script_dir = script_dir
         self.title = title
+        self.article_id = article_id
 
     # Publish the article if it needs to be published, else update it if it already exists
     # This function adds special dreamcloud buttons and uploads links
@@ -181,10 +182,17 @@ class article:
         response = session.get(url)
         articles = json.loads(response.content)
         article = None
-        for i in articles["articles"]:
-            if i['name'] == self.title:
-                article = i
-                break
+        if self.article_id:
+            for i in articles["articles"]:
+                if i['id'] == self.article_id:
+                    article = i
+                    break
+
+        else:
+            for i in articles["articles"]:
+                if i['name'] == self.title:
+                    article = i
+                    break
 
         return article
 
@@ -347,6 +355,8 @@ elif re.match(".*\.json", file_path):
     except:
         section_id = json_source['section_id']
 
+    article_id = json_source['id']
+
     derp = article(file_path, html_source, password, email, url, section_id,
-            script_dir, title)
+            script_dir, title, article_id)
     derp.publish_or_update_json()
