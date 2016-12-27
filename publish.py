@@ -61,7 +61,6 @@ class article:
         article_list_url = section["url"].rstrip(".json") + "/articles.json?per_page=500"
 
         self.article = self.get_article(article_list_url)
-
         if self.article:
             self.update_article_metadata()
             self.update_article()
@@ -161,8 +160,16 @@ class article:
     def get_section(self):
         session = requests.Session()
         session.auth = (self.email, self.password)
-        response = session.get(self.url + "/api/v2/help_center/sections.json?per_page=100")
-        sections = json.loads(response.content)
+
+        response_raw = session.get(self.url + "/api/v2/help_center/sections.json?per_page=100")
+        sections = json.loads(response_raw.content)
+        next_page = sections['next_page']
+        while next_page is not None:
+            page_raw = session.get(next_page)
+            page = json.loads(page_raw.content)
+            sections['sections'] = sections['sections'] + page['sections']
+            next_page = page['next_page']
+
         section = None
         for i in sections["sections"]:
             if i['id'] == self.section_id:
@@ -179,8 +186,16 @@ class article:
     def get_article(self, url):
         session = requests.Session()
         session.auth = (self.email, self.password)
-        response = session.get(url)
-        articles = json.loads(response.content)
+
+        response_raw = session.get(url)
+        articles = json.loads(response_raw.content)
+        next_page = articles['next_page']
+        while next_page is not None:
+            page_raw = session.get(next_page)
+            page = json.loads(page_raw.content)
+            articles['articles'] = articles['articles'] + page['articles']
+            next_page = page['next_page']
+
         article = None
         if self.article_id:
             for i in articles["articles"]:
